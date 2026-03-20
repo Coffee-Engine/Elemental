@@ -1,6 +1,6 @@
 (function() {
     elemental.ambientVideoConfig = {
-        sizeDivider: 5,
+        sizeDivider: 10,
         videos: []
     };
 
@@ -15,7 +15,13 @@
                 "crossorigin", 
                 "disablepictureinpicture", 
                 "disableremoteplayback",
-                "speed"
+                "width",
+                "height",
+                "playsinline",
+                "muted",
+                "poster",
+                "preload",
+                "fadespeed"
             ];
 
             #video;
@@ -23,11 +29,20 @@
             #gl;
             #resizeObserver;
 
+            get video() {
+                return this.#video;
+            }
+
             _updateSpeed() {
                 let speed = Number(this.getAttribute("fadespeed"));
                 if (isNaN(speed)) speed = 1;
 
                 this.fadeSpeed = speed;
+            }
+
+            updateFade(dt) {
+                this.#gl.globalAlpha = Math.max(Math.min(1, this.fadeSpeed * dt), 0);
+                this.#gl.drawImage(this.#video, 0, 0, this.#canvas.width, this.#canvas.height);
             }
 
             constructor() {
@@ -39,17 +54,13 @@
                 this.#gl = this.#canvas.getContext("2d");
                 this.#video.src = this.getAttribute("src");
 
-                setInterval(() => {
-                    this.#gl.globalAlpha = Math.max(Math.min(1, this.fadeSpeed * this.delta), 0);
-                    console.log(this.fadeSpeed);
-                    this.#gl.drawImage(this.#video, 0, 0, this.#canvas.width, this.#canvas.height);
-                }, 1/60);
-
                 this.#resizeObserver = new ResizeObserver(() => {
-                    this.#canvas.width = Math.floor(this.#video.videoWidth / elemental.ambientVideoConfig.sizeDivider);
-                    this.#canvas.height = Math.floor(this.#video.videoHeight / elemental.ambientVideoConfig.sizeDivider);
-                    this.#canvas.style.setProperty("--width", `${this.#video.width || this.#video.videowidth}px`);
-                    this.#canvas.style.setProperty("--height", `${this.#video.height || this.#video.videoHeight}px`);
+                    const { width, height } = this.#video.getBoundingClientRect();
+                    this.#canvas.width = Math.max(1, Math.ceil(width / elemental.ambientVideoConfig.sizeDivider));
+                    this.#canvas.height = Math.max(1, Math.ceil(height / elemental.ambientVideoConfig.sizeDivider));
+
+                    this.#canvas.style.setProperty("--width", `${width}px`);
+                    this.#canvas.style.setProperty("--height", `${height}px`);
                 });
 
                 this.#resizeObserver.observe(document.body);
@@ -57,11 +68,17 @@
                 this.#resizeObserver.observe(this.#video);
             }
 
+
             syncAttribs() {
                 const attribs = this.getAttributeNames();
+                //Sync values between elements
                 for (let attribID=0;attribID<attribs.length;attribID++) {
+                    //Make sure the values aren't the same
                     const attrib = attribs[attribID];
-                    this.#video.setAttribute(attrib, this.getAttribute(attrib));
+                    const newValue = this.getAttribute(attrib);
+                    const oldValue = this.#video.getAttribute(attrib);
+
+                    if (oldValue != newValue) this.#video.setAttribute(attrib, newValue);
                 }
             }
 
@@ -80,9 +97,8 @@
             }
 
             attributeChangedCallback(name, old, value) {
-                this.syncAttribs()
+                this.syncAttribs();
 
-                console.log(name);
                 if (name == "fadespeed") {
                     this._updateSpeed();
                 }
@@ -115,7 +131,7 @@
 
         const videos = elemental.ambientVideoConfig.videos;
         for (let i=0;i<videos.length;i++) {
-            videos[i].delta = dt;
+            videos[i].updateFade(dt);
         }
     }
 
