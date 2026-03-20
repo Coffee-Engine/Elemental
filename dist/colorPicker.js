@@ -398,6 +398,8 @@
     colorPickerContainer.appendChild(colorPickerAdjustHolders);
 
     //For doing visual adjustments
+    let currentColorPicker, currentColor;
+
     const adjustSliders = (valueName, value) => {
         switch (valueName) {
             case "r": currentColor.r = Math.floor(value * 255); break;
@@ -447,6 +449,8 @@
         const { s, l } = currentColor.HSL;
         hueAdjust.style.setProperty("--saturation", `${s * 100}%`);
         hueAdjust.style.setProperty("--lightness", `${l * 100}%`);
+
+        currentColorPicker.value = currentColor.hex;
     };
 
     //The basic main slider handler, handles both horizontal and vertical
@@ -514,7 +518,6 @@
     satValueAdjust.onmousedown = (event) => sliderFunctionality(event, colorPickerSatBrightPicker, "satValue");
 
     //Now for clicking off the actual prompt.
-    let currentColorPicker, currentColor;
     const clickOff = (event) => {
         if (event.target == currentColorPicker || colorPickerContainer.contains(event.target)) return;
 
@@ -540,6 +543,10 @@
         class: class extends HTMLElement {
             static observedAttributes = ["value"];
 
+            #value = "#ffffff";
+            set value(value) {
+                this.setAttribute("value", value);
+            }
             get value() { return this.getAttribute("value"); }
 
             constructor() {
@@ -552,7 +559,7 @@
             }
 
             attributeChangedCallback(name, old, value) {
-                this.style.setProperty("--color", value);
+                if (name == "value") this.style.setProperty("--color", value);
             }
         },
 
@@ -570,7 +577,7 @@
 
             border: 0.125em #dfdfdf outset;
 
-            background-color: var(--color);
+            background: linear-gradient(to right, var(--color) 0%, var(--color) 100%), linear-gradient(to bottom, #9f9f9f 50%, #cfcfcf 50%);
         }
 
         <el>:hover { border-color: #afafaf; }
