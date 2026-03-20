@@ -341,11 +341,11 @@
     const colorPickerContainer = document.createElement('div');
     colorPickerContainer.className = "elemental-color-picker-container";
     
-    const colorPickerSatBrightPicker = document.createElement("div");
-    colorPickerSatBrightPicker.className = "elemental-color-picker-satBrightPicker";
-    
     const satValueAdjust = document.createElement("div");
-    satValueAdjust.className = "elemental-color-picker-satValueAdjust";
+    satValueAdjust.className = "elemental-color-picker-satBrightPicker";
+    
+    const satValueSlider = document.createElement("div");
+    satValueSlider.className = "elemental-color-picker-satValueSlider";
 
     const hueAdjust = document.createElement("div");
     hueAdjust.className = "elemental-color-picker-adjust elemental-color-picker-hueAdjust";
@@ -380,7 +380,7 @@
     const alphaSlider = document.createElement("div");
     alphaSlider.className = "elemental-color-picker-slider elemental-color-picker-alphaSlider";
 
-    colorPickerSatBrightPicker.appendChild(satValueAdjust);
+    satValueAdjust.appendChild(satValueSlider);
 
     firstAdjust.appendChild(firstSlider);
     secondAdjust.appendChild(secondSlider);
@@ -393,7 +393,7 @@
     colorPickerAdjustHolders.appendChild(thirdAdjust);
     colorPickerAdjustHolders.appendChild(alphaAdjust);
 
-    colorPickerContainer.appendChild(colorPickerSatBrightPicker);
+    colorPickerContainer.appendChild(satValueAdjust);
     colorPickerContainer.appendChild(hueAdjust);
     colorPickerContainer.appendChild(colorPickerAdjustHolders);
 
@@ -435,15 +435,15 @@
         secondSlider.style.setProperty("--color", alphalessHex);
         thirdSlider.style.setProperty("--color", alphalessHex);
         alphaSlider.style.setProperty("--color", currentColor.hex);
-        satValueAdjust.style.setProperty("--color", alphalessHex);
+        satValueSlider.style.setProperty("--color", alphalessHex);
         hueSlider.style.setProperty("--color", alphalessHex);
 
         //Set the color on the big square
-        colorPickerSatBrightPicker.style.setProperty("--color", elemental.colorLib.HSVToHex({ h: currentColor.h, s: 1, v: 1 }));
+        satValueAdjust.style.setProperty("--color", elemental.colorLib.HSVToHex({ h: currentColor.h, s: 1, v: 1 }));
 
         //Move the dragger on the big square
-        satValueAdjust.style.setProperty("--x", `${currentColor.s * 100}%`);
-        satValueAdjust.style.setProperty("--y", `${(1 - currentColor.v) * 100}%`);
+        satValueSlider.style.setProperty("--x", `${currentColor.s * 100}%`);
+        satValueSlider.style.setProperty("--y", `${(1 - currentColor.v) * 100}%`);
 
         //Then the needed for the hue adjuster.
         const { s, l } = currentColor.HSL;
@@ -522,7 +522,7 @@
     thirdAdjust.onmousedown = (event) => sliderFunctionality(event, thirdAdjust, "tertiary");
     alphaAdjust.onmousedown = (event) => sliderFunctionality(event, alphaAdjust, "alpha");
     hueAdjust.onmousedown = (event) => sliderFunctionality(event, hueAdjust, "hue");
-    colorPickerSatBrightPicker.onmousedown = (event) => sliderFunctionality(event, colorPickerSatBrightPicker, "satValue");
+    satValueAdjust.onmousedown = (event) => sliderFunctionality(event, satValueAdjust, "satValue");
 
     //Now for clicking off the actual prompt.
     const clickOff = (event) => {
@@ -629,7 +629,7 @@
             background: linear-gradient(to top, #000 0%, transparent 100%), linear-gradient(to right, #fff 0%, var(--color) 100%);
         }
 
-        .elemental-color-picker-satValueAdjust {
+        .elemental-color-picker-satValueSlider {
             --color: #000000;
             --x: 0%;
             --y: 0%;
