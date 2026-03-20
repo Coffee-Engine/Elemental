@@ -8,6 +8,6 @@ Currently this adds a few new elements like
 
 Simply add the elemental main library and any elements you think you would like to your html file. Like so
 ```html
-    <script src="Path/To/Elemental/elemental.js">
-    <script src="Path/To/Element/colorPicker.js">
+    <script src="Path/To/Elemental/elemental.js"></script>
+    <script src="Path/To/Element/colorPicker.js"></script>
 ```
