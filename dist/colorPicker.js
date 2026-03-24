@@ -334,235 +334,296 @@
             alpha: "a",
             hue: "h",
             satValue: [ "s", "v" ]
-        }
+        },
+        defaultRatio: [8, 4]
     };
 
-    //Set up our color picker.
-    const colorPickerContainer = document.createElement('div');
-    colorPickerContainer.className = "elemental-color-picker-container";
-    
-    const satValueAdjust = document.createElement("div");
-    satValueAdjust.className = "elemental-color-picker-satBrightPicker";
-    
-    const satValueSlider = document.createElement("div");
-    satValueSlider.className = "elemental-color-picker-satValueSlider";
-
-    const hueAdjust = document.createElement("div");
-    hueAdjust.className = "elemental-color-picker-adjust elemental-color-picker-hueAdjust";
-    
-    const hueSlider = document.createElement("div");
-    hueSlider.className = "elemental-color-picker-slider elemental-color-picker-hueSlider";
-    
-    const colorPickerAdjustHolders = document.createElement("div");
-    colorPickerAdjustHolders.className = "elemental-color-picker-adjustHolder";
-    
-    const firstAdjust = document.createElement("div");
-    firstAdjust.className = "elemental-color-picker-adjust elemental-color-picker-firstAdjust";
-    
-    const firstSlider = document.createElement("div");
-    firstSlider.className = "elemental-color-picker-slider";
-    
-    const secondAdjust = document.createElement("div");
-    secondAdjust.className = "elemental-color-picker-adjust elemental-color-picker-secondAdjust";
-    
-    const secondSlider = document.createElement("div");
-    secondSlider.className = "elemental-color-picker-slider";
-    
-    const thirdAdjust = document.createElement("div");
-    thirdAdjust.className = "elemental-color-picker-adjust elemental-color-picker-thirdAdjust";
-    
-    const thirdSlider = document.createElement("div");
-    thirdSlider.className = "elemental-color-picker-slider";
-    
-    const alphaAdjust = document.createElement("div");
-    alphaAdjust.className = "elemental-color-picker-adjust elemental-color-picker-alphaAdjust";
-    
-    const alphaSlider = document.createElement("div");
-    alphaSlider.className = "elemental-color-picker-slider elemental-color-picker-alphaSlider";
-
-    satValueAdjust.appendChild(satValueSlider);
-
-    firstAdjust.appendChild(firstSlider);
-    secondAdjust.appendChild(secondSlider);
-    thirdAdjust.appendChild(thirdSlider);
-    alphaAdjust.appendChild(alphaSlider);
-    hueAdjust.appendChild(hueSlider);
-
-    colorPickerAdjustHolders.appendChild(firstAdjust);
-    colorPickerAdjustHolders.appendChild(secondAdjust);
-    colorPickerAdjustHolders.appendChild(thirdAdjust);
-    colorPickerAdjustHolders.appendChild(alphaAdjust);
-
-    colorPickerContainer.appendChild(satValueAdjust);
-    colorPickerContainer.appendChild(hueAdjust);
-    colorPickerContainer.appendChild(colorPickerAdjustHolders);
-
-    //For doing visual adjustments
-    let currentColorPicker, currentColor;
-
-    const adjustSliders = (valueName, value) => {
-        switch (valueName) {
-            case "r": currentColor.r = Math.floor(value * 255); break;
-            case "g": currentColor.g = Math.floor(value * 255); break;
-            case "b": currentColor.b = Math.floor(value * 255); break;
-            case "h": currentColor.h = Math.max(0, Math.min(value, 1)) * 360; break;
-            case "s": currentColor.s = value; break;
-            case "v": currentColor.v = value; break;
-            case "a": currentColor.a = Math.floor(value * 255); break;
-            case "hex": currentColor.hex = value; break;
+    elemental.colorPickerModule = class {
+        constructor(parent) {
+            this.parent = parent;
+            this.build(parent, parent.container);
         }
 
-        //Set variables needed for each value.
-        firstSlider.style.setProperty("--x", `${currentColor.r / 2.55}%`);
-        secondSlider.style.setProperty("--x", `${currentColor.g / 2.55}%`);
-        thirdSlider.style.setProperty("--x", `${currentColor.b / 2.55}%`);
-        alphaSlider.style.setProperty("--x", `${currentColor.a / 2.55}%`);
-        hueSlider.style.setProperty("--x", `${currentColor.h / 3.6}%`);
-
-        firstAdjust.style.setProperty("--combinedLow", elemental.colorLib.RGBToHex({ r: 0, g: currentColor.g, b: currentColor.b }));
-        firstAdjust.style.setProperty("--color", elemental.colorLib.RGBToHex({ r: 255, g: currentColor.g, b: currentColor.b }));
-
-        secondAdjust.style.setProperty("--combinedLow", elemental.colorLib.RGBToHex({ g: 0, r: currentColor.r, b: currentColor.b }));
-        secondAdjust.style.setProperty("--color", elemental.colorLib.RGBToHex({ g: 255, r: currentColor.r, b: currentColor.b }));
-
-        thirdAdjust.style.setProperty("--combinedLow", elemental.colorLib.RGBToHex({ b: 0, r: currentColor.r, g: currentColor.g }));
-        thirdAdjust.style.setProperty("--color", elemental.colorLib.RGBToHex({ b: 255, r: currentColor.r, g: currentColor.g }));
-
-        //Then the color properties
-        const alphalessHex = elemental.colorLib.RGBToHex({ r: currentColor.r, g: currentColor.g, b: currentColor.b });
-        alphaAdjust.style.setProperty("--color", alphalessHex);
-        firstSlider.style.setProperty("--color", alphalessHex);
-        secondSlider.style.setProperty("--color", alphalessHex);
-        thirdSlider.style.setProperty("--color", alphalessHex);
-        alphaSlider.style.setProperty("--color", currentColor.hex);
-        satValueSlider.style.setProperty("--color", alphalessHex);
-        hueSlider.style.setProperty("--color", alphalessHex);
-
-        //Set the color on the big square
-        satValueAdjust.style.setProperty("--color", elemental.colorLib.HSVToHex({ h: currentColor.h, s: 1, v: 1 }));
-
-        //Move the dragger on the big square
-        satValueSlider.style.setProperty("--x", `${currentColor.s * 100}%`);
-        satValueSlider.style.setProperty("--y", `${(1 - currentColor.v) * 100}%`);
-
-        //Then the needed for the hue adjuster.
-        const { s, l } = currentColor.HSL;
-        hueAdjust.style.setProperty("--saturation", `${s * 100}%`);
-        hueAdjust.style.setProperty("--lightness", `${l * 100}%`);
-
-        currentColorPicker.value = currentColor.hex;
-    };
-
-    //The basic main slider handler, handles both horizontal and vertical
-    const sliderFunctionality = (initEvent, parent, id) => {
-        initEvent.stopPropagation();
-        initEvent.preventDefault();
-
-        //Function for updating the values
-        const updateOnEvent = (event) => {
-            //Get bounds and calculate new value
-            const target = elemental.colorPickerConfig.sliderTarget[id];
-            if (!target) return;
-
-            switch (elemental.colorPickerConfig.sliderDirection[id]) {
-                case "x":{
-                    const { left, width, right } = parent.getBoundingClientRect();
-                    const percentage = (Math.max(left, Math.min(event.clientX, right)) - left) / width;
-                    adjustSliders(target, percentage);
-                    break;
-                }
-
-                case "y":{
-                    const { top, height, bottom } = parent.getBoundingClientRect();
-                    const percentage = (Math.max(top, Math.min(event.clientY, bottom)) - top) / height;
-                    adjustSliders(target, percentage);
-                    break;
-                }
-
-                case "xy":{
-                    //Check to make sure the target is valid
-                    if ((!Array.isArray(target)) || target.length < 2) return;
-
-                    const { left, width, right, top, height, bottom } = parent.getBoundingClientRect();
-                    const percentageX = (Math.max(left, Math.min(event.clientX, right)) - left) / width;
-                    const percentageY = 1 - ((Math.max(top, Math.min(event.clientY, bottom)) - top) / height);
-                    adjustSliders(target[0], percentageX);
-                    adjustSliders(target[1], percentageY);
-                    break;
-                }
-            
-                default:
-                    break;
-            }
-        }
-
-        //Actually updating the values
-        updateOnEvent(initEvent);
-        const moveSlider = (event) => {
-            event.stopPropagation();
-            event.preventDefault();
-
-            updateOnEvent(event);
-        }
-
-        const dropSlider = (event) => {
-            document.removeEventListener("mousemove", moveSlider);
-            document.removeEventListener("mouseup", dropSlider);
-            document.removeEventListener("mouseleave", dropSlider);
-        }
-
-        document.addEventListener("mousemove", moveSlider);
-        document.addEventListener("mouseup", dropSlider);
-        document.addEventListener("mouseleave", dropSlider);
-    };
-
-    //Set sliders to use their attributes
-    firstAdjust.onmousedown = (event) => sliderFunctionality(event, firstAdjust, "primary");
-    secondAdjust.onmousedown = (event) => sliderFunctionality(event, secondAdjust, "secondary");
-    thirdAdjust.onmousedown = (event) => sliderFunctionality(event, thirdAdjust, "tertiary");
-    alphaAdjust.onmousedown = (event) => sliderFunctionality(event, alphaAdjust, "alpha");
-    hueAdjust.onmousedown = (event) => sliderFunctionality(event, hueAdjust, "hue");
-    satValueAdjust.onmousedown = (event) => sliderFunctionality(event, satValueAdjust, "satValue");
-
-    //Now for clicking off the actual prompt.
-    const clickOff = (event) => {
-        if (event.target == currentColorPicker || colorPickerContainer.contains(event.target)) return;
-
-        document.body.removeChild(colorPickerContainer);
-        window.removeEventListener("mousedown", clickOff);
+        build(parent, container) {}
+        update(target, value, parent) {}
+        destroy(parent) {}
     }
-    
-    const popupColorPicker = (colorPicker, x, y) => {
-        if (!colorPickerContainer.parentElement) document.body.appendChild(colorPickerContainer);
-        colorPickerContainer.style.setProperty("--x", `${x}px`);
-        colorPickerContainer.style.setProperty("--y", `${y}px`);
 
-        currentColorPicker = colorPicker;
-        currentColor = new elemental.colorLib.color();
-        currentColor.hex = colorPicker.value;
-        adjustSliders("no-op", 0);
-        
-        window.addEventListener("mousedown", clickOff);
-    };
+    elemental.colorPickerGeneric = class extends elemental.colorPickerModule {
+        build(parent, container) {
+            this.sliderContainer = document.createElement('div');
+            this.sliderContainer.className = `${parent.prefix}slider-container`;
+            
+            this.satValueAdjust = document.createElement("div");
+            this.satValueAdjust.className = `${parent.prefix}satBrightPicker`;
+            
+            this.satValueSlider = document.createElement("div");
+            this.satValueSlider.className = `${parent.prefix}satValueSlider`;
+
+            this.hueAdjust = document.createElement("div");
+            this.hueAdjust.className = `${parent.prefix}-adjust ${parent.prefix}hueAdjust`;
+            
+            this.hueSlider = document.createElement("div");
+            this.hueSlider.className = `${parent.prefix}slider ${parent.prefix}hueSlider`;
+
+            this.colorPickerAdjustHolders = document.createElement("div");
+            this.colorPickerAdjustHolders.className = `${parent.prefix}adjustHolder`;
+            
+            this.firstAdjust = document.createElement("div");
+            this.firstAdjust.className = `${parent.prefix}adjust ${parent.prefix}firstAdjust`;
+            
+            this.firstSlider = document.createElement("div");
+            this.firstSlider.className = `${parent.prefix}slider`;
+            
+            this.secondAdjust = document.createElement("div");
+            this.secondAdjust.className = `${parent.prefix}adjust ${parent.prefix}secondAdjust`;
+            
+            this.secondSlider = document.createElement("div");
+            this.secondSlider.className = `${parent.prefix}slider`;
+            
+            this.thirdAdjust = document.createElement("div");
+            this.thirdAdjust.className = `${parent.prefix}adjust ${parent.prefix}thirdAdjust`;
+            
+            this.thirdSlider = document.createElement("div");
+            this.thirdSlider.className = `${parent.prefix}slider`;
+            
+
+            this.satValueAdjust.appendChild(this.satValueSlider);
+
+            this.firstAdjust.appendChild(this.firstSlider);
+            this.secondAdjust.appendChild(this.secondSlider);
+            this.thirdAdjust.appendChild(this.thirdSlider);
+            this.hueAdjust.appendChild(this.hueSlider);
+
+            this.colorPickerAdjustHolders.appendChild(this.firstAdjust);
+            this.colorPickerAdjustHolders.appendChild(this.secondAdjust);
+            this.colorPickerAdjustHolders.appendChild(this.thirdAdjust);
+
+            this.sliderContainer.appendChild(this.satValueAdjust);
+            this.sliderContainer.appendChild(this.hueAdjust);
+            this.sliderContainer.appendChild(this.colorPickerAdjustHolders);
+
+            //Set up alpha is alpha exists
+            if (parent.hasAttribute("alpha")) {
+                this.alphaAdjust = document.createElement("div");
+                this.alphaAdjust.className = `${parent.prefix}adjust ${parent.prefix}alphaAdjust`;
+                
+                this.alphaSlider = document.createElement("div");
+                this.alphaSlider.className = `${parent.prefix}slider ${parent.prefix}alphaSlider`;
+
+                this.alphaAdjust.appendChild(this.alphaSlider);
+                this.colorPickerAdjustHolders.appendChild(this.alphaAdjust);
+                parent.setupSliderFunctionality(this.alphaAdjust, "alpha");
+            }
+            
+            container.appendChild(this.sliderContainer);
+
+            parent.setupSliderFunctionality(this.firstAdjust, "primary");
+            parent.setupSliderFunctionality(this.secondAdjust, "secondary");
+            parent.setupSliderFunctionality(this.thirdAdjust, "tertiary");
+            parent.setupSliderFunctionality(this.hueAdjust, "hue");
+            parent.setupSliderFunctionality(this.satValueAdjust, "satValue");
+        }
+
+        updateColor(target, value, parent) {
+            //Set variables needed for each value.
+            this.firstSlider.style.setProperty("--x", `${parent.color.r / 2.55}%`);
+            this.secondSlider.style.setProperty("--x", `${parent.color.g / 2.55}%`);
+            this.thirdSlider.style.setProperty("--x", `${parent.color.b / 2.55}%`);
+            if (this.alphaAdjust) this.alphaSlider.style.setProperty("--x", `${parent.color.a / 2.55}%`);
+            this.hueSlider.style.setProperty("--x", `${parent.color.h / 3.6}%`);
+
+            this.firstAdjust.style.setProperty("--combinedLow", elemental.colorLib.RGBToHex({ r: 0, g: parent.color.g, b: parent.color.b }));
+            this.firstAdjust.style.setProperty("--color", elemental.colorLib.RGBToHex({ r: 255, g: parent.color.g, b: parent.color.b }));
+
+            this.secondAdjust.style.setProperty("--combinedLow", elemental.colorLib.RGBToHex({ g: 0, r: parent.color.r, b: parent.color.b }));
+            this.secondAdjust.style.setProperty("--color", elemental.colorLib.RGBToHex({ g: 255, r: parent.color.r, b: parent.color.b }));
+
+            this.thirdAdjust.style.setProperty("--combinedLow", elemental.colorLib.RGBToHex({ b: 0, r: parent.color.r, g: parent.color.g }));
+            this.thirdAdjust.style.setProperty("--color", elemental.colorLib.RGBToHex({ b: 255, r: parent.color.r, g: parent.color.g }));
+
+            //Then the color properties
+            const alphalessHex = elemental.colorLib.RGBToHex({ r: parent.color.r, g: parent.color.g, b: parent.color.b });
+            if (this.alphaAdjust) {
+                this.alphaAdjust.style.setProperty("--color", alphalessHex);
+                this.alphaSlider.style.setProperty("--color", parent.color.hex);
+            }
+
+            this.firstSlider.style.setProperty("--color", alphalessHex);
+            this.secondSlider.style.setProperty("--color", alphalessHex);
+            this.thirdSlider.style.setProperty("--color", alphalessHex);
+            this.satValueSlider.style.setProperty("--color", alphalessHex);
+            this.hueSlider.style.setProperty("--color", alphalessHex);
+
+            //Set the color on the big square
+            this.satValueAdjust.style.setProperty("--color", elemental.colorLib.HSVToHex({ h: parent.color.h, s: 1, v: 1 }));
+
+            //Move the dragger on the big square
+            this.satValueSlider.style.setProperty("--x", `${parent.color.s * 100}%`);
+            this.satValueSlider.style.setProperty("--y", `${(1 - parent.color.v) * 100}%`);
+
+            //Then the needed for the hue adjuster.
+            const { s, l } = parent.color.HSL;
+            this.hueAdjust.style.setProperty("--saturation", `${s * 100}%`);
+            this.hueAdjust.style.setProperty("--lightness", `${l * 100}%`);
+        }
+    }
+
+    elemental.colorPickerConfig.defaultModules = [
+        elemental.colorPickerGeneric
+    ]
 
     //Define a custom color picker
     elemental.newElement("Color Picker", {
         class: class extends HTMLElement {
-            static observedAttributes = ["value"];
+            static observedAttributes = ["value", "gradient", "alpha"];
+            prefix = "elemental-color-picker-";
 
-            #value = "#ffffff";
             set value(value) {
                 this.setAttribute("value", value);
             }
             get value() { return this.getAttribute("value"); }
 
+            #mouseDownFunc;
+            spawnedModules = [];
+
             constructor() {
                 super();
                 
+                //On click popup
                 this.onclick = () => {
                     const clientRect = this.getBoundingClientRect();
-                    popupColorPicker(this, clientRect.left, clientRect.top);
+                    this.createPopup(clientRect.left, clientRect.top);
                 }
+
+                //Now setup our listener functions for when we are popped up.
+                const self = this;
+                this.#mouseDownFunc = (event) => self.clickHandler.call(self, event);
+            }
+
+            setupSliderFunctionality(element, id) {
+                element.onmousedown = (downEvent) => {
+                    //Make sure we don't accidentally select the background.
+                    downEvent.stopPropagation();
+                    downEvent.preventDefault();
+
+                    //Function for updating the values
+                    const updateOnEvent = (event) => {
+                        //Get bounds and calculate new value
+                        const target = elemental.colorPickerConfig.sliderTarget[id];
+                        if (!target) return;
+
+                        //Switch between possible directions the slider can go.
+                        switch (elemental.colorPickerConfig.sliderDirection[id]) {
+                            case "x":{
+                                const { left, width, right } = element.getBoundingClientRect();
+                                const percentage = (Math.max(left, Math.min(event.clientX, right)) - left) / width;
+                                this.updateColor(target, percentage);
+                                break;
+                            }
+
+                            case "y":{
+                                const { top, height, bottom } = element.getBoundingClientRect();
+                                const percentage = (Math.max(top, Math.min(event.clientY, bottom)) - top) / height;
+                                this.updateColor(target, percentage);
+                                break;
+                            }
+
+                            case "xy":{
+                                //Check to make sure the target is valid
+                                if ((!Array.isArray(target)) || target.length < 2) return;
+
+                                const { left, width, right, top, height, bottom } = element.getBoundingClientRect();
+                                const percentageX = (Math.max(left, Math.min(event.clientX, right)) - left) / width;
+                                const percentageY = 1 - ((Math.max(top, Math.min(event.clientY, bottom)) - top) / height);
+                                this.updateColor(target[0], percentageX);
+                                this.updateColor(target[1], percentageY);
+                                break;
+                            }
+                        
+                            default:
+                                break;
+                        }
+                    }
+
+                    //Actually updating the values
+                    updateOnEvent(downEvent);
+                    const moveSlider = (event) => {
+                        event.stopPropagation();
+                        event.preventDefault();
+
+                        updateOnEvent(event);
+                    }
+
+                    const dropSlider = (event) => {
+                        document.removeEventListener("mousemove", moveSlider);
+                        document.removeEventListener("mouseup", dropSlider);
+                        document.removeEventListener("mouseleave", dropSlider);
+                    }
+
+                    document.addEventListener("mousemove", moveSlider);
+                    document.addEventListener("mouseup", dropSlider);
+                    document.addEventListener("mouseleave", dropSlider);
+                }
+            }
+
+            buildPopup(x, y, modules) {
+                //Create the container
+                this.container = document.createElement('div');
+                this.container.className = `${this.prefix}container`;
+                this.container.style.setProperty("--x", `${x}px`);
+                this.container.style.setProperty("--y", `${y}px`);
+
+                //Then spawn the needed modules
+                modules = modules || elemental.colorPickerConfig.defaultModules;
+                for (let moduleID in modules) {
+                    const module = new modules[moduleID](this);
+                    this.spawnedModules.push(module);
+                }
+ 
+                //Then add the container to the DOM
+                document.body.appendChild(this.container);
+            }
+
+            updateColor(target, value) {
+                switch (target) {
+                    case "r": this.color.r = Math.floor(value * 255); break;
+                    case "g": this.color.g = Math.floor(value * 255); break;
+                    case "b": this.color.b = Math.floor(value * 255); break;
+                    case "h": this.color.h = Math.max(0, Math.min(value, 1)) * 360; break;
+                    case "s": this.color.s = value; break;
+                    case "v": this.color.v = value; break;
+                    case "a": this.color.a = Math.floor(value * 255); break;
+                    case "hex": this.color.hex = value; break;
+                }
+
+                for (let moduleID in this.spawnedModules) {
+                    const module = this.spawnedModules[moduleID];
+                    module.updateColor(target, value, this);
+                }
+
+                this.value = this.color.hex;
+            }
+
+            clickHandler(event) {
+                if (event.target == this || this.container.contains(event.target)) return;
+                this.destroyPopup();
+            }
+
+            destroyPopup() {
+                if (!this.container.parentElement) return;
+                document.body.removeChild(this.container);
+                window.removeEventListener("mousedown", this.#mouseDownFunc);
+            }
+
+            createPopup(x, y, config) {
+                this.buildPopup(x, y);
+
+                this.color = new elemental.colorLib.color();
+                this.color.hex = this.value;
+                this.updateColor(null, 0);
+                
+                window.addEventListener("mousedown",  this.#mouseDownFunc);
             }
 
             attributeChangedCallback(name, old, value) {
@@ -591,7 +652,6 @@
         <el>:active { border-style: inset; }
 
         .elemental-color-picker-container {
-            --scale: 1;
             --x: 0px;
             --y: 0px;
 
@@ -599,26 +659,20 @@
             top: var(--y);
             left: var(--x);
 
-            aspect-ratio: 2/1;
-            height: 192px;
+            width: 384px;
+            height: auto;
 
             background-color: #efefef;
             border: 4px #dfdfdf outset;
 
             z-index: 9999;
+        }
 
+        .elemental-color-picker-slider-container {
             display: grid;
             grid-template-columns: 50% 10% 40%;
-
-            transform: translate(-50%, -50%) scale(var(--scale)) translate(50%, 50%);
-        }
-
-        @media screen and (max-width: 800px), (max-height: 800px) {
-            .elemental-color-picker-container { --scale: 0.5; }
-        }
-
-        @media screen and (min-width: 2000px) and (min-height: 2000px) {
-            .elemental-color-picker-container { --scale: 1.5; }
+            
+            aspect-ratio: 2/1;
         }
 
         .elemental-color-picker-satBrightPicker {
