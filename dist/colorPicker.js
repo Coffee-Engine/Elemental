@@ -314,6 +314,23 @@
                     l: l
                 }
             }
+
+            constructor(hex) {
+                if (typeof hex == "string") this.hex = hex;
+            }
+        },
+
+        gradient: class {
+            colors = [
+                [ new elemental.colorLib.color("#ff00ff"), "0%" ],
+                [ new elemental.colorLib.color("#000000"), "100%" ]
+            ];
+            angle = 0;
+            mode = "linear";
+
+            unpackString(string) {
+                console.log(string);
+            }
         }
     };
 
@@ -345,10 +362,13 @@
         }
 
         build(parent, container) {}
-        update(target, value, parent) {}
+        updateColor(target, value, parent) {}
         destroy(parent) {}
+
+        condition(parent) { return true; }
     }
 
+    //The base sliders for the colour picker
     elemental.colorPickerGeneric = class extends elemental.colorPickerModule {
         build(parent, container) {
             this.sliderContainer = document.createElement('div');
@@ -469,7 +489,45 @@
         }
     }
 
-    elemental.colorPickerConfig.defaultModules = [
+    //Then gradient tools
+    elemental.colorPickerGradient = class extends elemental.colorPickerModule {
+        build(parent, container) {
+            this.gradientContainer = document.createElement("div");
+            this.gradientContainer.className = `${parent.prefix}gradient-container`;
+
+            this.modeContainer = document.createElement("div");
+            this.modeContainer.className = `${parent.prefix}gradient-modes`;
+
+            this.noGradient = document.createElement("button");
+            this.noGradient.className = `${parent.prefix}gradient-mode`;
+
+            this.linearGradient = document.createElement("button");
+            this.linearGradient.className = `${parent.prefix}gradient-mode ${parent.prefix}gradient-mode-linear`;
+
+            this.radialGradient = document.createElement("button");
+            this.radialGradient.className = `${parent.prefix}gradient-mode ${parent.prefix}gradient-mode-radial`;
+
+            this.conicGradient = document.createElement("button");
+            this.conicGradient.className = `${parent.prefix}gradient-mode ${parent.prefix}gradient-mode-conic`;
+
+            this.displayGradient = document.createElement("div");
+            this.displayGradient.className = `${parent.prefix}gradient-display`;
+
+            this.modeContainer.appendChild(this.noGradient);
+            this.modeContainer.appendChild(this.linearGradient);
+            this.modeContainer.appendChild(this.radialGradient);
+            this.modeContainer.appendChild(this.conicGradient);
+
+            this.gradientContainer.appendChild(this.modeContainer);
+            this.gradientContainer.appendChild(this.displayGradient);
+            container.appendChild(this.gradientContainer);
+        }
+
+        condition(parent) { return parent.hasAttribute("gradient"); }
+    }
+
+    //Modules we have by default if the colour picker element doesn't specify any. Right now a take all situation.
+    elemental.colorPickerConfig.modules = [
         elemental.colorPickerGeneric
     ]
 
@@ -481,8 +539,13 @@
 
             set value(value) {
                 this.setAttribute("value", value);
+                if (this.color instanceof elemental.colorLib.color) this.color.hex = value;
+                else if (this.color instanceof elemental.colorLib.gradient) this.color.unpackString(value);
             }
-            get value() { return this.getAttribute("value"); }
+            get value() {
+                if (this.hasAttribute("value")) return this.getAttribute("value");
+                else return "#000000";
+            }
 
             #mouseDownFunc;
             spawnedModules = [];
@@ -495,6 +558,9 @@
                     const clientRect = this.getBoundingClientRect();
                     this.createPopup(clientRect.left, clientRect.top);
                 }
+
+                this.color = new elemental.colorLib.color();
+                this.color.hex = this.value || "#000000";
 
                 //Now setup our listener functions for when we are popped up.
                 const self = this;
@@ -567,7 +633,7 @@
                 }
             }
 
-            buildPopup(x, y, modules) {
+            buildPopup(x, y) {
                 //Create the container
                 this.container = document.createElement('div');
                 this.container.className = `${this.prefix}container`;
@@ -575,7 +641,7 @@
                 this.container.style.setProperty("--y", `${y}px`);
 
                 //Then spawn the needed modules
-                modules = modules || elemental.colorPickerConfig.defaultModules;
+                modules = modules || elemental.colorPickerConfig.modules;
                 for (let moduleID in modules) {
                     const module = new modules[moduleID](this);
                     this.spawnedModules.push(module);
@@ -616,11 +682,8 @@
                 window.removeEventListener("mousedown", this.#mouseDownFunc);
             }
 
-            createPopup(x, y, config) {
+            createPopup(x, y) {
                 this.buildPopup(x, y);
-
-                this.color = new elemental.colorLib.color();
-                this.color.hex = this.value;
                 this.updateColor(null, 0);
                 
                 window.addEventListener("mousedown",  this.#mouseDownFunc);
@@ -779,7 +842,7 @@
         }
 
         .elemental-color-picker-alphaSlider {
-            background: linear-gradient(to top, var(--color) 0%, var(--color) 100%), linear-gradient(to bottom, #00000033 0%, transparent 100%)
+            background: linear-gradient(to top, var(--color) 0%, var(--color) 100%), linear-gradient(to bottom, #00000033 0%, transparent 100%);
         }
 
         .elemental-color-picker-hueSlider {
@@ -791,6 +854,55 @@
             height: 8px;
 
             transform: translate(0%, -50%);
+        }
+
+        .elemental-color-picker-gradient-container {
+            display: grid;
+            grid-template-rows: auto auto;
+            margin: 4px;
+        }
+
+        .elemental-color-picker-gradient-modes {
+            display: flex;
+            justify-content: center;
+        }
+
+        .elemental-color-picker-gradient-mode {
+            --gradientColor: #5f5f5f;
+
+            width: 20px;
+            height: auto;
+
+            aspect-ratio: 1;
+
+            background: var(--gradientColor);
+        }
+
+        .elemental-color-picker-gradient-mode-selected {
+            --gradientColor: #18a3ff;
+        }
+
+        .elemental-color-picker-gradient-mode-linear {
+            background: linear-gradient(to right, transparent 0%, var(--gradientColor) 100%);
+        }
+
+        .elemental-color-picker-gradient-mode-radial {
+            background: radial-gradient(at center, var(--gradientColor) 0%, transparent 100%);
+        }
+
+        .elemental-color-picker-gradient-mode-conic {
+            background: conic-gradient(at center, var(--gradientColor) 0%, transparent 100%);
+        }
+
+        .elemental-color-picker-gradient-display {
+            /* Ha ha half life reference! */
+            --gradient: linear-gradient(to right, #000000 50%, #ff00ff 50%);
+
+            background: var(--gradient), linear-gradient(to bottom, #00000033 0%, transparent 100%);
+            border: 4px #dfdfdf outset;
+
+            margin: 4px;
+            height: 16px;
         }
         `
     });
