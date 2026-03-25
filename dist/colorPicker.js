@@ -644,10 +644,30 @@
         class: class extends HTMLElement {
             // "isgradient" is moreso for css
             static observedAttributes = ["value", "gradient", "alpha", "isgradient"];
+
+            #fromUpdate = false;
             prefix = "elemental-color-picker-";
 
             set value(value) {
-                this.setAttribute("value", value);
+                this.style.setProperty("--color", value)
+                //Update colors if the source of the value being set is not from the update.
+                if (!this.#fromUpdate) {
+                    //Make sure value is valid
+                    if (!value) return;
+
+                    //If so do our thing
+                    if (value.startsWith("#")) {
+                        this.color = new elemental.colorLib.color(value);
+                        this.setAttribute("isgradient", false);
+                    }
+                    else if (this.color instanceof elemental.colorLib.gradient) {
+                        this.color.unpackString(value);
+                        this.setAttribute("isgradient", true);
+                    }
+                }
+                else {
+                    this.setAttribute("value", value);
+                }
             }
             get value() {
                 if (this.hasAttribute("value")) return this.getAttribute("value");
@@ -784,6 +804,7 @@
                 }
 
                 //Get css if gradient, get hex if color
+                this.#fromUpdate = true;
                 if (this.color instanceof elemental.colorLib.color) {
                     this.setAttribute("isgradient", false);
                     this.value = this.color.hex;
@@ -792,6 +813,8 @@
                     this.setAttribute("isgradient", true);
                     this.value = this.color.css;
                 }
+                //Make sure to also put the from update ticker back.
+                this.#fromUpdate = false;
             }
 
             clickHandler(event) {
@@ -818,7 +841,7 @@
             }
 
             attributeChangedCallback(name, old, value) {
-                if (name == "value") this.style.setProperty("--color", value);
+                if (name == "value" && !this.#fromUpdate) this.value = value;
             }
         },
 
