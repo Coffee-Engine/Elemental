@@ -800,7 +800,7 @@
             if (this.parent.color instanceof elemental.colorLib.gradient) {
                 const gradient = this.parent.color;
 
-                //Loop through colors and build the gradient display;
+                //Loop through colors and build the gradient grabbers;
                 for (let i = 0; i < gradient.colors.length; i++) {
                     const color = gradient.colors[i];          
                     //Create the color's element and assign needed variables
