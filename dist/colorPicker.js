@@ -558,8 +558,6 @@
 
     //Set up configuration and the base module.
     elemental.colorPickerConfig = {
-        preferredColorObject: elemental.colorLib.color,
-        preferredGradientObject: elemental.colorLib.gradient,
         sliderDirection: {
             primary: "x",
             secondary: "x",
@@ -671,8 +669,10 @@
         }
 
         updateColor(target, value, parent) {
+            //Grab the current color
             let color = parent.color;
             if (color instanceof elemental.colorLib.gradient) color = color.colors[parent.gradientIndex][0];
+
             //Set variables needed for each value.
             this.firstSlider.style.setProperty("--x", `${color.r / 2.55}%`);
             this.secondSlider.style.setProperty("--x", `${color.g / 2.55}%`);
@@ -730,9 +730,6 @@
         }
 
         build(parent, container) {
-            //Just make sure gradient index is there.
-            parent.gradientIndex = parent.gradientIndex || 0;
-
             if (parent.color instanceof elemental.colorLib.color) this._mode = "none";
             else this._mode = parent.color.mode;
 
@@ -772,6 +769,10 @@
             this.addSelectors();
         }
 
+        updateColor(target, value, parent) {
+            this.updateDisplayGradient();
+        }
+
         addSelectors() {
             //Clear the display gradient of children
             this.displayGradient.innerHTML = "";
@@ -784,20 +785,49 @@
                 const gradient = this.parent.color;
 
                 //Loop through colors and build the gradient display;
-                let linearGrad = "linear-gradient(to right";
                 for (let i = 0; i < gradient.colors.length; i++) {
-                    const color = gradient.colors[i];
-                    
+                    const color = gradient.colors[i];          
                     //Create the color's element and assign needed variables
                     const element = document.createElement("div");
                     element.className = `${this.parent.prefix}gradient-point`;
                     this.displayGradient.appendChild(element);
+
+                    //Check to see if it's awesome and cool, and totally the selected one.
+                    if (this.parent.gradientIndex == i) element.className += ` ${this.parent.prefix}gradient-point-selected`;
+
+                    element.onclick = () => {
+                        console.log(this.parent.gradientIndex);
+                        //Reset the class of the previously selected
+                        this.colorGrabbers[this.parent.gradientIndex].className = `${this.parent.prefix}gradient-point`;
+
+                        //Change the selection and select the current one
+                        this.parent.gradientIndex = i;
+                        this.parent.updateColor(null, 0);
+                        element.className = `${this.parent.prefix}gradient-point ${this.parent.prefix}gradient-point-selected`;
+                    }
 
                     element.style.setProperty("--color", color[0].hex);
                     element.style.setProperty("--x", `${color[1] * 100}%`);
 
                     //Add it to the array and update the linear gradient.
                     this.colorGrabbers.push(element);
+                }
+                
+                this.updateDisplayGradient()
+            }
+        }
+
+        updateDisplayGradient() {
+            if (this.mode == "none") return;
+
+            //Make sure we are a gradient, and if we are, summon the grabbers
+            if (this.parent.color instanceof elemental.colorLib.gradient) {
+                const gradient = this.parent.color;
+
+                //Loop through colors and build the gradient display;
+                let linearGrad = "linear-gradient(to right";
+                for (let i = 0; i < gradient.colors.length; i++) {
+                    const color = gradient.colors[i];
                     linearGrad += `, ${color[0].hex} ${color[1] * 100}%`;
                 }
 
@@ -866,6 +896,8 @@
 
             #fromUpdate = false;
             prefix = "elemental-color-picker-";
+
+            gradientIndex = 0;
 
             set value(value) {
                 this.style.setProperty("--color", value)
@@ -1008,6 +1040,7 @@
             }
 
             updateColor(target, value) {
+
                 let color = this.color;
                 if (color instanceof elemental.colorLib.gradient) color = color.colors[this.gradientIndex][0];
 
@@ -1304,6 +1337,11 @@
             border: 4px #dfdfdf outset;
 
             transform: translate(-50%, 0%);
+        }
+
+        .elemental-color-picker-gradient-point-selected {
+            background: #18a3ff;
+            border: 4px #dfdfdf inset;
         }
         `
     });
