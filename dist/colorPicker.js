@@ -409,7 +409,6 @@
                 return parsed;
             }
 
-            //Tested with 
             parseColorsFromArgs(args, from) {
                 const colors = [];
 
@@ -559,6 +558,8 @@
 
     //Set up configuration and the base module.
     elemental.colorPickerConfig = {
+        preferredColorObject: elemental.colorLib.color,
+        preferredGradientObject: elemental.colorLib.gradient,
         sliderDirection: {
             primary: "x",
             secondary: "x",
@@ -768,7 +769,42 @@
             container.appendChild(this.gradientContainer);
 
             this.updateMode(this.mode, this.mode);
+            this.addSelectors();
+        }
 
+        addSelectors() {
+            //Clear the display gradient of children
+            this.displayGradient.innerHTML = "";
+            this.colorGrabbers = [];
+
+            if (this.mode == "none") return;
+
+            //Make sure we are a gradient, and if we are, summon the grabbers
+            if (this.parent.color instanceof elemental.colorLib.gradient) {
+                const gradient = this.parent.color;
+
+                //Loop through colors and build the gradient display;
+                let linearGrad = "linear-gradient(to right";
+                for (let i = 0; i < gradient.colors.length; i++) {
+                    const color = gradient.colors[i];
+                    
+                    //Create the color's element and assign needed variables
+                    const element = document.createElement("div");
+                    element.className = `${this.parent.prefix}gradient-point`;
+                    this.displayGradient.appendChild(element);
+
+                    element.style.setProperty("--color", color[0].hex);
+                    element.style.setProperty("--x", `${color[1] * 100}%`);
+
+                    //Add it to the array and update the linear gradient.
+                    this.colorGrabbers.push(element);
+                    linearGrad += `, ${color[0].hex} ${color[1] * 100}%`;
+                }
+
+                linearGrad += ")";
+
+                this.displayGradient.style.setProperty("--gradient", linearGrad);
+            }
         }
 
         updateMode(current, last) {
@@ -808,6 +844,7 @@
                     else this.parent.color.mode = current;
                 }
 
+                this.addSelectors();
                 this.parent.updateColor(null, 0);
             }
         }
@@ -1238,6 +1275,8 @@
         }
 
         .elemental-color-picker-gradient-display {
+            position:relative;
+
             /* Ha ha half life reference! */
             --gradient: linear-gradient(to right, #000000 50%, #ff00ff 50%);
 
@@ -1246,6 +1285,25 @@
 
             margin: 4px;
             height: 16px;
+
+            overflow: hidden;
+        }
+
+        .elemental-color-picker-gradient-point {
+            --color: #ffffff;
+            --x: 0%;
+
+            position: absolute;
+            left: var(--x);
+
+            width: auto;
+            height: 8px;
+            aspect-ratio: 1;
+
+            background: linear-gradient(to right, var(--color) 0%, var(--color) 100%), linear-gradient(to bottom, #dfdfdf 50%, #afafaf 50%);
+            border: 4px #dfdfdf outset;
+
+            transform: translate(-50%, 0%);
         }
         `
     });
