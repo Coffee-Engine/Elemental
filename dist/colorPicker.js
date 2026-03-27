@@ -631,8 +631,8 @@
             satValue: [ "s", "v" ]
         },
 
-        addGradientPointIcon: "",
-        removeGradientPointIcon: ""
+        addGradientPointIcon: `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="73.22485" height="73.22485" viewBox="0,0,73.22485,73.22485"><g transform="translate(-203.38757,-143.38757)"><g fill="none" stroke-miterlimit="10"><path d="M240,149.1568v61.68639" stroke="currentColor" stroke-width="8" stroke-linecap="round"/><path d="M209.15681,180h61.68639" stroke="currentColor" stroke-width="8" stroke-linecap="round"/><path d="M203.38757,216.61243v-73.22485h73.22485v73.22485z" stroke="none" stroke-width="0" stroke-linecap="butt"/></g></g></svg>`,
+        removeGradientPointIcon: `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="73.22485" height="73.22485" viewBox="0,0,73.22485,73.22485"><g transform="translate(-203.38757,-143.38757)"><g fill="none" stroke-miterlimit="10"><path d="M218.19057,158.19057l43.61887,43.61887" stroke="currentColor" stroke-width="8" stroke-linecap="round"/><path d="M218.19057,201.80943l43.61886,-43.61886" stroke="currentColor" stroke-width="8" stroke-linecap="round"/><path d="M203.38757,216.61243v-73.22485h73.22485v73.22485z" stroke="none" stroke-width="0" stroke-linecap="butt"/></g></g></svg>`
     };
 
     elemental.colorPickerModule = class {
@@ -796,12 +796,6 @@
             this.buttonContainer = document.createElement("div");
             this.buttonContainer.className = `${parent.prefix}gradient-buttons`;
 
-            this.removeButton = document.createElement("div");
-            this.removeButton.innerHTML = elemental.sanitizeDOM(elemental.colorPickerConfig.removeGradientPointIcon);
-
-            this.modeContainer = document.createElement("div");
-            this.modeContainer.className = `${parent.prefix}gradient-modes`;
-
             //Create mode buttons
             this.modes = {
                 none: document.createElement("button"),
@@ -814,6 +808,20 @@
             this.modes.linear.onclick = () => this.mode = "linear";
             this.modes.radial.onclick = () => this.mode = "radial";
             this.modes.conic.onclick = () => this.mode = "conic";
+
+            this.pointControlContainer = document.createElement("div");
+            this.pointControlContainer.className = `${parent.prefix}gradient-modes ${parent.prefix}gradient-point-controls`;
+
+            this.addButton = document.createElement("div");
+            this.addButton.innerHTML = elemental.sanitizeDOM(elemental.colorPickerConfig.addGradientPointIcon);
+            this.addButton.classList = `${parent.prefix}gradient-button ${parent.prefix}gradient-add-button`;
+
+            this.removeButton = document.createElement("div");
+            this.removeButton.innerHTML = elemental.sanitizeDOM(elemental.colorPickerConfig.removeGradientPointIcon);
+            this.removeButton.classList = `${parent.prefix}gradient-button ${parent.prefix}gradient-remove-button`;
+
+            this.modeContainer = document.createElement("div");
+            this.modeContainer.className = `${parent.prefix}gradient-modes`;
 
             //Create the display gradient but keep it hidden because it will only appear when a gradient mode is selected.
             this.displayGradient = document.createElement("div");
@@ -845,7 +853,12 @@
             this.modeContainer.appendChild(this.modes.radial);
             this.modeContainer.appendChild(this.modes.conic);
 
+            this.pointControlContainer.appendChild(this.addButton);
+            this.pointControlContainer.appendChild(this.removeButton);
+
             this.buttonContainer.appendChild(this.modeContainer);
+            this.buttonContainer.appendChild(this.pointControlContainer);
+
             this.gradientContainer.appendChild(this.buttonContainer);
             container.appendChild(this.gradientContainer);
 
@@ -1433,6 +1446,31 @@
             aspect-ratio: 1;
 
             background: var(--gradientColor);
+        }
+
+        .elemental-color-picker-gradient-button {
+            width: 12px;
+            height: 12px;
+            
+            color: #000000;
+            border: 4px #dfdfdf outset;
+            background: #efefef;
+
+            display: flex;
+            justify-content: center;
+        }
+
+        .elemental-color-picker-gradient-button > svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        .elemental-color-picker-gradient-button:hover {
+            background: #dfdfdf;
+        }
+
+        .elemental-color-picker-gradient-button:active {
+            border: 4px #dfdfdf inset;
         }
 
         .elemental-color-picker-gradient-mode-selected {
