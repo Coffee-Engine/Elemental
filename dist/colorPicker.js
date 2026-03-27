@@ -384,6 +384,51 @@
                 return this.colors;
             }
 
+            createPoint(percentage, color) {
+
+                //Find the inbetween color.
+                if (!color) {
+                    for (let i = 0; i < this.colors.length - 1; i++) {
+                        const l = this.colors[i];
+                        const r = this.colors[i + 1];
+
+                        //If we are between two numbers interpolate
+                        if (percentage > l[1] && percentage < r[1]) {
+                            //Get RGBA, since it interpolates better for gradients than HSV.
+                            const [ lr, lg, lb, la ] = [ l[0].r, l[0].g, l[0].b, l[0].a ]; 
+                            const [ rr, rg, rb, ra ] = [ r[0].r, r[0].g, r[0].b, r[0].a ];
+
+                            //Get the interpolation value
+                            const int = (percentage - l[1]) / (r[1] - l[1]);
+
+                            //Then interpolate
+                            const ir = lr + (rr - lr) * int;
+                            const ig = lg + (rg - lg) * int;
+                            const ib = lb + (rb - lb) * int;
+                            const ia = la + (ra - la) * int;
+
+                            //finally create the new color object and set it's value to the new ones.
+                            color = new elemental.colorLib.color("#ff00ff");
+                            color.r = ir;
+                            color.g = ig;
+                            color.b = ib;
+                            color.a = ia;
+                        }
+                        //If we ontop of one set the new color object to it.
+                        else if (percentage == l[1]) color = new elemental.colorLib.color(l[0].hex);
+                        else if (percentage == r[1]) color = new elemental.colorLib.color(r[0].hex);
+
+                        //If we finally have a color, break the loop.
+                        if (color) break;
+                    }
+                }
+
+                this.colors.push([color, percentage]);
+                this.organizeColors();
+
+                return this.colors.findIndex((val) => val[0] == color);
+            }
+
             parseCSSAngle(angle) {
                 let parsed = 0;
                 //For rads it's a simple find and parse.
@@ -585,7 +630,8 @@
             hue: "h",
             satValue: [ "s", "v" ]
         },
-        defaultRatio: [8, 4]
+        defaultRatio: [8, 4],
+        gradientSelectionGraceArea: 0.05
     };
 
     elemental.colorPickerModule = class {
@@ -766,6 +812,25 @@
             this.displayGradient = document.createElement("div");
             this.displayGradient.className = `${parent.prefix}gradient-display`;
 
+            //Behavior for the display gradient is this
+            // click -> (Is on selector) -> no? -> create point
+            //                v Yes?
+            //            Select point
+            this.displayGradient.onmousedown = (event) => {
+                const { left, right, width } = this.displayGradient.getBoundingClientRect();
+                const percentage = (Math.max(Math.min(right, event.clientX), left) - left) / width;
+
+                //Create the point if possible, and change the index;
+                if (parent.color instanceof elemental.colorLib.gradient) {
+                    const id = parent.color.createPoint(percentage);
+                    parent.gradientIndex = id;
+
+                    //Update the color selectors
+                    this.parent.updateColor(null, 0);
+                    this.addSelectors();
+                }
+            }
+
             //Append the html elements and update the selected mode.
             this.modeContainer.appendChild(this.modes.none);
             this.modeContainer.appendChild(this.modes.linear);
@@ -785,7 +850,7 @@
             //Update selected color on gradient if need be.
             if (parent.color instanceof elemental.colorLib.gradient) {
                 const gradIndex = this.parent.gradientIndex;
-                this.colorGrabbers[gradIndex].style.setProperty("--color", parent.color.colors[gradIndex].hex);
+                if (this.colorGrabbers[gradIndex]) this.colorGrabbers[gradIndex].style.setProperty("--color", parent.color.colors[gradIndex].hex);
             }
         }
 
@@ -811,7 +876,11 @@
                     //Check to see if it's awesome and cool, and totally the selected one.
                     if (this.parent.gradientIndex == i) element.className += ` ${this.parent.prefix}gradient-point-selected`;
 
-                    element.onclick = () => {
+                    //The behavior is rather simple, but we do need to stop propagation to prevent unwanted point creation.
+                    element.onmousedown = (event) => {
+                        event.stopImmediatePropagation();
+                        event.stopPropagation();
+
                         //Reset the class of the previously selected
                         this.colorGrabbers[this.parent.gradientIndex].className = `${this.parent.prefix}gradient-point`;
 
@@ -1060,7 +1129,6 @@
             }
 
             updateColor(target, value) {
-
                 let color = this.color;
                 if (color instanceof elemental.colorLib.gradient) color = color.colors[this.gradientIndex][0];
 
