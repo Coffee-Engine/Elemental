@@ -47,6 +47,10 @@ document.getElementById("download").onclick = () => {
 
         resolve();
     })).then(() => {
-        console.log(compiled);
+        fetch("LICENSE").then(res => res.text()).then(text => {
+            //Add the license
+            compiled = `//==--==--==\\\\\n${text}\n//==--==--==\\\\` + compiled;
+            console.log(compiled);
+        })
     })
 }
