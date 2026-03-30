@@ -1088,10 +1088,37 @@
         condition(parent) { return parent.hasAttribute("gradient"); }
     }
 
+    elemental.colorPickerConfirmation = class extends elemental.colorPickerModule {
+        build(parent, container) {
+            this.container = document.createElement("div");
+            this.container.className = `${parent.prefix}confirmation-container`;
+
+            this.hexInput = document.createElement("input");
+            this.hexInput.type = "text";
+            this.hexInput.className = `${parent.prefix}confirmation-hex`;
+
+            this.doneButton = document.createElement("div");
+            this.doneButton.className = `${parent.prefix}confirmation-done-button`;
+
+            this.container.appendChild(this.hexInput);
+            this.container.appendChild(this.doneButton);
+            container.appendChild(this.container);
+        }
+
+        updateColor(target, value, parent) {
+            //Grab the current color
+            let color = parent.color;
+            if (color instanceof elemental.colorLib.gradient) color = color.colors[parent.gradientIndex][0];
+
+            this.hexInput.value = color.hex;
+        }
+    }
+
     //Modules we have by default if the colour picker element doesn't specify any. Right now a take all situation.
     elemental.colorPickerConfig.modules = [
         elemental.colorPickerGradient,
-        elemental.colorPickerGeneric
+        elemental.colorPickerGeneric,
+        elemental.colorPickerConfirmation
     ]
 
     //Define a custom color picker
@@ -1580,6 +1607,32 @@
 
         .elemental-color-picker-gradient-point-selected {
             background: #18a3ff;
+            border: 4px #dfdfdf inset;
+        }
+
+        .elemental-color-picker-confirmation-container {
+            display: grid;
+            grid-template-columns: 1fr auto;
+        }
+
+        .elemental-color-picker-confirmation-hex {
+            border: 4px #dfdfdf inset;
+        }
+
+        .elemental-color-picker-confirmation-done-button {
+            border: 4px #dfdfdf outset;
+            
+            width: auto;
+            height: calc(100% - 8px);
+            
+            aspect-ratio: 1;
+        }
+
+        .elemental-color-picker-confirmation-done-button:hover {
+            background: #dfdfdf;
+        }
+
+        .elemental-color-picker-confirmation-done-button:active {
             border: 4px #dfdfdf inset;
         }
         `
