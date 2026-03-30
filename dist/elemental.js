@@ -67,6 +67,16 @@
             for (let childID = 0; childID < children.length; childID++) {
                 const child = children[childID];
                 if (elemental.badElements.includes(child.tagName.toLowerCase())) child.parentElement.removeChild(child);
+
+                const names = child.getAttributeNames();
+                for (let attributeID = 0; attributeID < names.length; attributeID++) {
+                    const attribute = names[attributeID];
+                    if (attribute.startsWith("on")) child.removeAttribute(attribute);
+                    else {
+                        const data = child.getAttribute(attribute);
+                        if (data.startsWith("javascript:")) child.removeAttribute(attribute);
+                    }
+                }
             }
 
             //Return the final sanitized HTML
