@@ -1496,7 +1496,7 @@
         .elemental-color-picker-gradient-mode {
             --gradientColor: #5f5f5f;
 
-            width: 20px;
+            width: 16px;
             height: auto;
 
             aspect-ratio: 1;
