@@ -69,9 +69,9 @@
                 if (spl1.length >= 3 && spl1.length <= 4) pref = spl1.map((val) => parseInt(val, 16) * 17);
                 else if (spl2.length >= 3 && spl2.length <= 4) pref = spl2.map((val) => parseInt(val, 16));
                 else return {
-                    r: 255,
+                    r: 0,
                     g: 0,
-                    b: 255,
+                    b: 0,
                     a: 255,
                 }
 
@@ -89,9 +89,9 @@
                     a: pref[3]
                 }
                 else return {
-                    r: 255,
+                    r: 0,
                     g: 0,
-                    b: 255,
+                    b: 0,
                     a: 255,
                 }
             }
@@ -615,11 +615,12 @@
             "conic-gradient": "conic",
         },
 
-        unpackString(str) {
+        unpackString(str, noGradient) {
             if (typeof str != "string") return;
 
             if (str.startsWith("#")) return new elemental.colorLib.color(str);
-            else return new elemental.colorLib.gradient(str);
+            else if (!noGradient) return new elemental.colorLib.gradient(str);
+            else return new elemental.colorLib.color("#000000");
         }
     };
 
@@ -936,6 +937,12 @@
                 const gradIndex = this.parent.gradientIndex;
                 if (this.colorGrabbers[gradIndex]) this.colorGrabbers[gradIndex].style.setProperty("--color", parent.color.colors[gradIndex].hex);
             }
+
+            //Switch color mode to full if need be.
+            if (target == "hex" || target == "full") {
+                if (parent.color instanceof elemental.colorLib.color && this.mode != "none") this.mode = "none";
+                else if (parent.color instanceof elemental.colorLib.gradient && this.mode != parent.color.mode) this.mode = parent.color.mode;
+            }
         }
 
         addSelectors() {
@@ -1098,6 +1105,7 @@
         condition(parent) { return parent.hasAttribute("gradient"); }
     }
 
+    //Finally the hex, and done button
     elemental.colorPickerConfirmation = class extends elemental.colorPickerModule {
         build(parent, container) {
             this.container = document.createElement("div");
@@ -1114,10 +1122,11 @@
             this.container.appendChild(this.doneButton);
             container.appendChild(this.container);
 
+            //Functionality.
             this.hexInput.onchange = () => {            
                 if (elemental.colorPickerConfig.hexInputShowsGradient) {
                     parent.value = this.hexInput.value;
-                    this.parent.updateColor(null, 0);
+                    this.parent.updateColor("full", this.hexInput.value);
                 }
                 else parent.updateColor("hex", this.hexInput.value);
             }
@@ -1164,7 +1173,7 @@
                     if (!value) return;
 
                     //If so do our thing
-                    this.color = elemental.colorLib.unpackString(value);
+                    this.color = elemental.colorLib.unpackString(value, !this.hasAttribute("gradient"));
 
                     //update gradient attrib
                     const isGradient = this.color instanceof elemental.colorLib.gradient;
