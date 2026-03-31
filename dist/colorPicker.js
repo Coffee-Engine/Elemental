@@ -1296,11 +1296,6 @@
                     default: break;
                 }
 
-                for (let moduleID in this.spawnedModules) {
-                    const module = this.spawnedModules[moduleID];
-                    module.updateColor(target, value, this);
-                }
-
                 //Get css if gradient, get hex if color
                 this.#fromUpdate = true;
                 if (this.color instanceof elemental.colorLib.color) {
@@ -1313,6 +1308,11 @@
                 }
                 //Make sure to also put the from update ticker back.
                 this.#fromUpdate = false;
+
+                for (let moduleID in this.spawnedModules) {
+                    const module = this.spawnedModules[moduleID];
+                    module.updateColor(target, value, this);
+                }
             }
 
             clickHandler(event) {
