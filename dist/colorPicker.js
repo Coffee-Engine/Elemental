@@ -61,7 +61,7 @@
             if (typeof Hex === "string") {
                 Hex = Hex.trim();
 
-                //split into two.
+                //split into two. Check to see if one matches the description of a hex code, otherwise discard. And return pink
                 const spl1 = Hex.match(/[a-f\d]/g);
                 const spl2 = Hex.match(/[a-f\d][a-f\d]/g);
                 let pref = spl2;
@@ -75,6 +75,7 @@
                     a: 255,
                 }
 
+                //Make sure, and make GOD DAMN SURE. that the preferred array is either RGB, or RGBA
                 if (pref.length == 3) return {
                     r: pref[0],
                     g: pref[1],
@@ -104,9 +105,9 @@
         },
 
         RGBToHex: (RGB) => {
-            let hexR = Math.floor(RGB.r).toString(16);
-            let hexG = Math.floor(RGB.g).toString(16);
-            let hexB = Math.floor(RGB.b).toString(16);
+            let hexR = Math.floor(Math.max(Math.min(RGB.r, 255), 0)).toString(16);
+            let hexG = Math.floor(Math.max(Math.min(RGB.g, 255), 0)).toString(16);
+            let hexB = Math.floor(Math.max(Math.min(RGB.b, 255), 0)).toString(16);
 
             if (hexR.length == 1) hexR = "0" + hexR;
             if (hexG.length == 1) hexG = "0" + hexG;
@@ -114,7 +115,7 @@
 
             //Transparency
             if (typeof RGB.a == "number") {
-                let hexA = Math.floor(RGB.a).toString(16);
+                let hexA = Math.floor(Math.max(Math.min(RGB.a, 255), 0)).toString(16);
                 if (hexA.length == 1) hexA = "0" + hexA;
 
                 return `#${hexR}${hexG}${hexB}${hexA.toLowerCase() == "ff" ? "" : hexA}`;
