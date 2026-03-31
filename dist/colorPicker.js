@@ -635,6 +635,8 @@
             satValue: [ "s", "v" ]
         },
 
+        hexInputShowsGradient: true,
+
         addGradientPointIcon: `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="73.22485" height="73.22485" viewBox="0,0,73.22485,73.22485"><g transform="translate(-203.38757,-143.38757)"><g fill="none" stroke-miterlimit="10"><path d="M240,149.1568v61.68639" stroke="currentColor" stroke-width="8" stroke-linecap="round"/><path d="M209.15681,180h61.68639" stroke="currentColor" stroke-width="8" stroke-linecap="round"/><path d="M203.38757,216.61243v-73.22485h73.22485v73.22485z" stroke="none" stroke-width="0" stroke-linecap="butt"/></g></g></svg>`,
         removeGradientPointIcon: `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="73.22485" height="73.22485" viewBox="0,0,73.22485,73.22485"><g transform="translate(-203.38757,-143.38757)"><g fill="none" stroke-miterlimit="10"><path d="M218.19057,158.19057l43.61887,43.61887" stroke="currentColor" stroke-width="8" stroke-linecap="round"/><path d="M218.19057,201.80943l43.61886,-43.61886" stroke="currentColor" stroke-width="8" stroke-linecap="round"/><path d="M203.38757,216.61243v-73.22485h73.22485v73.22485z" stroke="none" stroke-width="0" stroke-linecap="butt"/></g></g></svg>`
     };
@@ -1108,7 +1110,13 @@
         updateColor(target, value, parent) {
             //Grab the current color
             let color = parent.color;
-            if (color instanceof elemental.colorLib.gradient) color = color.colors[parent.gradientIndex][0];
+
+            //Determine if we want the whole gradient code or not.
+            if (elemental.colorPickerConfig.hexInputShowsGradient) {
+                this.hexInput.value = parent.value
+                return;
+            }
+            else if (color instanceof elemental.colorLib.gradient) color = color.colors[parent.gradientIndex][0];
 
             this.hexInput.value = color.hex;
         }
