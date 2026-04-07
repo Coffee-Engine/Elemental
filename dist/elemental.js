@@ -101,5 +101,5 @@
     }
 
     elemental.styleElement = document.createElement("style");
-    document.head.appendChild(elemental.styleElement);
+    document.head.insertBefore(elemental.styleElement, document.head.children[0]);
 })();
