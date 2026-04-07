@@ -1431,8 +1431,12 @@
                 this.container.className = `${this.cssPrefix}container`;
 
                 //Set the position and scroll values
-                this.container.style.setProperty("--x", `${scrollX + x}px`);
-                this.container.style.setProperty("--y", `${scrollY + y}px`);
+                x += scrollX;
+                y += scrollY;
+
+                //Set iniitial positions
+                this.container.style.setProperty("--x", `${x}px`);
+                this.container.style.setProperty("--y", `${y}px`);
 
                 this.container.style.setProperty("--scrollX", `${scrollX}px`);
                 this.container.style.setProperty("--scrollY", `${scrollY}px`);
@@ -1453,6 +1457,30 @@
  
                 //Then add the container to the DOM
                 document.body.appendChild(this.container);
+
+                const reposition = () => {
+                    this.container.style.setProperty("--x", `${x}px`);
+                    this.container.style.setProperty("--y", `${y}px`);
+                    const {top, left, bottom, right} = this.container.getBoundingClientRect();
+                    
+                    //Visible X
+                    let finalX = x;
+                    let finalY = y;
+
+                    if (top < 0) finalY = y - top;
+                    else if (bottom > window.innerHeight) finalY = y + window.innerHeight - bottom;
+
+                    if (left < 0) finalX = x - left;
+                    else if (right > window.innerWidth) finalX = x + window.innerWidth - right;
+
+                    //Reposition to be on screen... if oob
+                    if (finalX != x) this.container.style.setProperty("--x", `${finalX}px`);
+                    if (finalY != y) this.container.style.setProperty("--y", `${finalY}px`);
+
+                    if (this.container) requestAnimationFrame(reposition);
+                }
+
+                requestAnimationFrame(reposition);
             }
 
             updateColor(target, value) {
@@ -1497,8 +1525,10 @@
 
             destroyPopup() {
                 if (!this.container.parentElement) return;
+
                 document.body.removeChild(this.container);
                 window.removeEventListener("mousedown", this.#mouseDownFunc);
+                this.container = null;
             }
 
             createPopup(x, y) {
@@ -1559,24 +1589,6 @@
 
             z-index: 9999;
         }
-
-        /*
-        @media screen and (max-width: 540px) {
-            @media screen and (min-height: 100vw) {
-                <pr>container {
-                    position: absolute;
-
-                    top: calc(var(--scrollY) + 50%);
-                    left: var(--scrollX);
-
-                    width: 100%;
-                    height: auto;
-
-                    transform: translate(0%, -50%);
-                }
-            }
-        }
-        */
 
         <pr>slider-container {
             display: grid;
