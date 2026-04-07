@@ -1330,10 +1330,10 @@
                 }
                 else {
                     this.setAttribute("value", value);
+
+                    //Dispatch the change event.
+                    this.dispatchEvent(new Event("change"));
                 }
-                
-                //Dispatch the change event.
-                this.dispatchEvent(new Event("change"));
             }
             get value() {
                 if (this.hasAttribute("value")) return this.getAttribute("value");
