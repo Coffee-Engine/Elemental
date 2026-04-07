@@ -1458,7 +1458,10 @@
                 //Then add the container to the DOM
                 document.body.appendChild(this.container);
 
+                //Make sure the picker is always on screen.
                 const reposition = () => {
+                    if (!this.container) return;
+
                     this.container.style.setProperty("--x", `${x}px`);
                     this.container.style.setProperty("--y", `${y}px`);
                     const {top, left, bottom, right} = this.container.getBoundingClientRect();
